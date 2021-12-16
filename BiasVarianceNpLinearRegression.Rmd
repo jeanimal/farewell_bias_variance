@@ -268,4 +268,24 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
   coord_cartesian(ylim = c(0, 300)) 
 ```
 
-Okay, now we see a sustained period of low test variance.  But it looks like mostly noise.
+Okay, now we see a sustained period of low test variance.  But it looks like mostly noise, although the ariance of the noise is going down as we add more parameters.  I bet if I increased the sample size I could get a clearer trend.
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 100 # Crank this up to reduce noise!
+df <- data.frame()
+for (p in 2:91) { # 9 original + 9 * 9 + intercept
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+
