@@ -241,6 +241,8 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
 
 Aha!  Here we get the return to low errors if we go with enough parameters.  It still smells like a bug.
 
+Let's crank up the number of available parameters by using every combination of pairs of columns.
+
 ```{r}
 X <- as.matrix(mtcars[, -1])
 X <- cbind(X,
@@ -275,8 +277,7 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
   coord_cartesian(ylim = c(0, 300)) 
 ```
-
-Okay, now we see a sustained period of low test variance.  But it looks like mostly noise, although the ariance of the noise is going down as we add more parameters.  I bet if I increased the sample size I could get a clearer trend.
+Finally this is enough parameters to see the double descent clearly, although I cannot explain why it happens at exactly 26 parameters.  There is a period of sustained low test error, and while it is noisy, the variance is decreasing as we add more parameters.  I bet if I increased the sample size I could get a clearer trend.
 
 ```{r}
 num_rows <- 10 # Back to 10
@@ -297,3 +298,4 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
   coord_cartesian(ylim = c(0, 300)) 
 ```
 
+Meh... only a tiny bit clearer.
