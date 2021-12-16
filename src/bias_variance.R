@@ -24,15 +24,15 @@ pseudo_inv <- function(matrix) {
 # Code from https://m-clark.github.io/posts/2021-10-30-double-descent/
 fit_ridgeless = function(X_train, y, X_test, y_test){
   # get the coefficient estimates
-  b = pseudo_inv(crossprod(X_train)) %*% crossprod(X_train, y)
+  b <- pseudo_inv(crossprod(X_train)) %*% crossprod(X_train, y)
   
   # get training/test predictions
-  predictions_train = X_train %*% b
-  predictions_test  = X_test %*% b
+  predictions_train <- X_train %*% b
+  predictions_test <- X_test %*% b
   
   # get training/test error
-  rmse_train = sqrt(mean((y - predictions_train[,1])^2))
-  rmse_test  = sqrt(mean((y_test - predictions_test[,1])^2))
+  rmse_train <- sqrt(mean((y - predictions_train[,1])^2))
+  rmse_test <- sqrt(mean((y_test - predictions_test[,1])^2))
   
   # return result
   list(

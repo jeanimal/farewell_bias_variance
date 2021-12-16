@@ -25,8 +25,8 @@ data(mtcars)
 Below w set up our X matrix of input data (replacing the y column with a column of 1's for the intercept).  Then we set up the y vector to be predicted, which is miles per gallon per car.
 
 ```{r}
-X = as.matrix(cbind(1, mtcars[, -1])) # Drop mpg (1st col), replace with intercept
-y = mtcars$mpg # mpg is the first column
+X <- as.matrix(cbind(1, mtcars[, -1])) # Drop mpg (1st col), replace with intercept
+y <- mtcars$mpg # mpg is the first column
 ```
 
 
@@ -45,13 +45,20 @@ sample_train_test <- function(X, y, p, n_train) {
 }
 ```
 
+Let's also make all code after here reproducible with this seed.  Feel free to change / remove so you can run your own experiments.
+
+```{r}
+set.seed(1)
+```
+
+
 ## Basic bias-variance
 
 There are only 10 columns in the mtcars data set (including the intercept).  Since p, the number of parameters, can only range to 10, we can take at most 10 rows of data.  For each sample of rows and columns, we calculate train and test error.  We do this for 20 samples.
 
 ```{r}
+num_rows <- 10 # Restricted to the number of columns, 10.
 num_samples <- 20
-num_rows <- 10
 df <- data.frame()
 for (p in 2:10) {
   out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
@@ -60,13 +67,13 @@ for (p in 2:10) {
 }
 colnames(df) <- c("p", "train", "test")
 df_long <- pivot_longer(df, train:test)
-
 ```
 
-Let's plot every single sample-- this is not usually shown but it lets you see the big increase in variance to the right.  We can see the main impact of getting near p=10 is to increase the variance– some estimates are good but some are crazy!
+To better illustrate what this code does, let's plot every single sample.  We can see the primary impact of getting near p=10 is to increase the variance– some estimates are good but some are crazy!
 
 ```{r bias-variance1, echo=FALSE}
-ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point()
+ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
 ```
 Taking the mean error at each amount of p, we recover the usual bias-variance diagram, showing train error always goes down by test error has a sweet spot– a minimum– somewhere in between 0 and 10.
 
@@ -79,6 +86,186 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 But of course the interesting part is what happens to overparameterized linear regression!
 There are several ways to overparameterize.
 
-### Reducing num rows sampled.
+### Reducing numver of rows sampled to move interpolation threshold lower
 
+One idea to see the overparameterized regime is, instead of increasing the number of parameters, just lower the number of rows.  Then we hit the overparameterized regime sooner!  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
 
+```{r}
+num_rows <- 5 # Lowered so we can see overparametrized regime.
+num_samples <- 20
+df <- data.frame()
+for (p in 2:10) {
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+Here is the plot of the mean train and test error.
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+This is not quite what I expected.  I thought the peak would be at p=5, not p=7.  But at least we do see the error descending again on the other side of the peak.  We need more than 10 parameters to see how far it goes over there.
+
+### Adding columns with random data
+
+Okay, now let's go back to the most straightforward solution of adding columns.  I will start by just adding 20 columns with normally distributed random data.
+
+```{r}
+X <- as.matrix(cbind(1, mtcars[, -1]))
+num_rand <- 20
+X <- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_rand))
+```
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 20
+df <- data.frame()
+for (p in 2:30) { # Increased range of parameters.
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+So how did this work?  I expect higher error overall with all those random columns, with a max error at p = 10.
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+Up to p=10, we got a fairly straightforward bias-variance diagram.  But what happened after that is crazy.  Both train and test error slowly increase.
+
+And then there is a surprise plunge in both errors.  The good news is that train error is zero, as expected once interpolation is reached.  But what is so special about p=26?  This looks to me like a possible bug in the code.
+
+### Adding columns with 2nd order effects
+
+Okay, now let's go back to the most straightforward solution of adding columns.  I will start by just adding 20 columns with normally distributed random data.
+
+```{r}
+X <- as.matrix(mtcars[, -1])
+X <- cbind(X, X[,1]*X[,1], X[,2]*X[,2], X[,3]*X[,3], X[,4]*X[,4], X[,5]*X[,5], X[,6]*X[,6], X[,7]*X[,7], X[,8]*X[,8], X[,9]*X[,9])
+X <- as.matrix(cbind(1, X)) # Add intercept column
+```
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 20
+df <- data.frame()
+for (p in 2:19) { # 9 original + 9 squared + intercept
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+
+Well, that was not a double descent...  Error just went through the roof. But I did not have as many parameters as with the random ones. 
+
+```{r}
+X <- as.matrix(mtcars[, -1])
+X <- cbind(X, X[,1]*X[,1], X[,1]*X[,2], X[,1]*X[,3], X[,1]*X[,4], X[,1]*X[,5], X[,1]*X[,6], X[,1]*X[,7], X[,1]*X[,8], X[,1]*X[,9])
+X <- as.matrix(cbind(1, X)) # Add intercept column
+```
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 20
+df <- data.frame()
+for (p in 2:19) { # 9 original + 9 pairs + intercept
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+
+It's still just marching up and up in error.
+
+Let's combine both types of extra parameters so we can get a higher parameter count.
+```{r}
+X <- as.matrix(mtcars[, -1])
+X <- cbind(X,
+  X[,1]*X[,1], X[,2]*X[,2], X[,3]*X[,3], X[,4]*X[,4], X[,5]*X[,5], X[,6]*X[,6], X[,7]*X[,7], X[,8]*X[,8], X[,9]*X[,9],
+  X[,1]*X[,1], X[,1]*X[,2], X[,1]*X[,3], X[,1]*X[,4], X[,1]*X[,5], X[,1]*X[,6], X[,1]*X[,7], X[,1]*X[,8], X[,1]*X[,9])
+X <- as.matrix(cbind(1, X)) # Add intercept column
+```
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 20
+df <- data.frame()
+for (p in 2:28) { # 9 original + 9 squared + 9 pairs + intercept
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+
+Aha!  Here we get the return to low errors if we go with enough parameters.  It still smells like a bug.
+
+```{r}
+X <- as.matrix(mtcars[, -1])
+X <- cbind(X,
+  X[,1]*X[,1], X[,1]*X[,2], X[,1]*X[,3], X[,1]*X[,4], X[,1]*X[,5], X[,1]*X[,6], X[,1]*X[,7], X[,1]*X[,8], X[,1]*X[,9],
+  X[,2]*X[,1], X[,2]*X[,2], X[,2]*X[,3], X[,2]*X[,4], X[,2]*X[,5], X[,2]*X[,6], X[,2]*X[,7], X[,2]*X[,8], X[,2]*X[,9],
+  X[,3]*X[,1], X[,3]*X[,2], X[,3]*X[,3], X[,3]*X[,4], X[,3]*X[,5], X[,3]*X[,6], X[,3]*X[,7], X[,3]*X[,8], X[,3]*X[,9],
+  X[,4]*X[,1], X[,4]*X[,2], X[,4]*X[,3], X[,4]*X[,4], X[,4]*X[,5], X[,4]*X[,6], X[,4]*X[,7], X[,4]*X[,8], X[,4]*X[,9],
+  X[,5]*X[,1], X[,5]*X[,2], X[,5]*X[,3], X[,5]*X[,4], X[,5]*X[,5], X[,5]*X[,6], X[,5]*X[,7], X[,5]*X[,8], X[,5]*X[,9],
+  X[,6]*X[,1], X[,6]*X[,2], X[,6]*X[,3], X[,6]*X[,4], X[,6]*X[,5], X[,6]*X[,6], X[,6]*X[,7], X[,6]*X[,8], X[,6]*X[,9],
+  X[,7]*X[,1], X[,7]*X[,2], X[,7]*X[,3], X[,7]*X[,4], X[,7]*X[,5], X[,7]*X[,6], X[,7]*X[,7], X[,7]*X[,8], X[,7]*X[,9],
+  X[,8]*X[,1], X[,8]*X[,2], X[,8]*X[,3], X[,8]*X[,4], X[,8]*X[,5], X[,8]*X[,6], X[,8]*X[,7], X[,8]*X[,8], X[,8]*X[,9],
+  X[,9]*X[,1], X[,9]*X[,2], X[,9]*X[,3], X[,9]*X[,4], X[,9]*X[,5], X[,9]*X[,6], X[,9]*X[,7], X[,9]*X[,8], X[,9]*X[,9]
+  )
+X <- as.matrix(cbind(1, X)) # Add intercept column
+```
+
+```{r}
+num_rows <- 10 # Back to 10
+num_samples <- 20
+df <- data.frame()
+for (p in 2:91) { # 9 original + 9 * 9 + intercept
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point() +
+  coord_cartesian(ylim = c(0, 300)) 
+```
+
+Okay, now we see a sustained period of low test variance.  But it looks like mostly noise.
