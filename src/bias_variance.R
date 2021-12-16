@@ -17,7 +17,7 @@ pseudo_inv <- function(matrix) {
 # that is, the overparameterized case.
 #
 # Usually regularization is used, but that requires a hyperparameter.  Instead we use
-# tidgeless regression from:
+# ridgeless regression from:
 # Hastie, Trevor, Andrea Montanari, Saharon Rosset, and Ryan J Tibshirani. 2019. 
 #   “Surprises in High-Dimensional Ridgeless Least Squares Interpolation.”
 #   arXiv Preprint arXiv:1903.08560
