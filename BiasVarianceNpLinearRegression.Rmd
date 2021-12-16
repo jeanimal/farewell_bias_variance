@@ -1,5 +1,5 @@
 ---
-title: "BiasVarianceNPLinearRegression"
+title: "Farewell to Bias-Variance Tradeoff: A study with linear regression"
 author: "Jean Ortega"
 date: "12/15/2021"
 output: html_document
@@ -9,7 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Goal
+
+This is an attempt to reproduce some of the ideas in: Dar, Yehuda, Vidya Muthukumar, and Richard G Baraniuk. 2021. “A Farewell to the Bias-Variance Tradeoff? An Overview of the Theory of Overparameterized Machine Learning.” arXiv Preprint arXiv:2109.02355.
+
+Their paper confirms you can see double descent even in linear regression-- no deep learning needed!  And they prove how model mis-specification is a big part in making this phenomenon possible, among other findings.
+
+My approach in reproducing results was inspired by this blog: https://m-clark.github.io/posts/2021-10-30-double-descent/
+
+## Set up
 
 Load some functions
 
