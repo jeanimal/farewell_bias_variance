@@ -1,0 +1,84 @@
+---
+title: "BiasVarianceNPLinearRegression"
+author: "Jean Ortega"
+date: "12/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Load some functions
+
+```{r}
+source("src/bias_variance.R")
+```
+
+Get the data
+```{r}
+data(mtcars)
+```
+
+Below w set up our X matrix of input data (replacing the y column with a column of 1's for the intercept).  Then we set up the y vector to be predicted, which is miles per gallon per car.
+
+```{r}
+X = as.matrix(cbind(1, mtcars[, -1])) # Drop mpg (1st col), replace with intercept
+y = mtcars$mpg # mpg is the first column
+```
+
+
+## Sampling function
+
+Here is a simple resampling function to generate training and testing errors.  It randomly select n_train rows of X and y, and p columns of X, fit a ridgeless regression, and then return the root mean squared error on the training data.  The test data uses the non-selected rows (which may be more or less than n_train).
+
+```{r}
+sample_train_test <- function(X, y, p, n_train) {
+  train_idx <- sample(nrow(X), size=n_train, replace=FALSE)
+  train_col <- sample((2:ncol(X)), size=p, replace=FALSE)
+  X_train = X[train_idx, train_col]; y_train = y[train_idx]
+  X_test  = X[-(1:n_train), train_col]; y_test  = y[-(1:n_train)]
+  result <- fit_ridgeless(X_train, y_train, X_test, y_test)
+  return(c(pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
+}
+```
+
+## Basic bias-variance
+
+There are only 10 columns in the mtcars data set (including the intercept).  Since p, the number of parameters, can only range to 10, we can take at most 10 rows of data.  For each sample of rows and columns, we calculate train and test error.  We do this for 20 samples.
+
+```{r}
+num_samples <- 20
+num_rows <- 10
+df <- data.frame()
+for (p in 2:10) {
+  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+
+```
+
+Let's plot every single sample-- this is not usually shown but it lets you see the big increase in variance to the right.  We can see the main impact of getting near p=10 is to increase the variance– some estimates are good but some are crazy!
+
+```{r bias-variance1, echo=FALSE}
+ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point()
+```
+Taking the mean error at each amount of p, we recover the usual bias-variance diagram, showing train error always goes down by test error has a sweet spot– a minimum– somewhere in between 0 and 10.
+
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
+```
+## Overparameterization
+
+But of course the interesting part is what happens to overparameterized linear regression!
+There are several ways to overparameterize.
+
+### Reducing num rows sampled.
+
+
