@@ -118,7 +118,7 @@ X <- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_rand)
 ```
 
 ```{r}
-num_rows <- 10 # Back to 10
+num_rows <- 10
 num_samples <- 40
 df <- data.frame()
 for (p in 2:29) { # Increased range of parameters.

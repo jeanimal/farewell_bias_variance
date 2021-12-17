@@ -249,7 +249,7 @@ df_long &lt;- pivot_longer(df, train:test)</code></pre>
 <pre class="r"><code>X &lt;- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y
 num_rand &lt;- 20
 X &lt;- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_rand))</code></pre>
-<pre class="r"><code>num_rows &lt;- 10 # Back to 10
+<pre class="r"><code>num_rows &lt;- 10
 num_samples &lt;- 40
 df &lt;- data.frame()
 for (p in 2:29) { # Increased range of parameters.
