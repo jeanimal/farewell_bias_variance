@@ -185,7 +185,7 @@ X <- cbind(X,
 ```
 
 ```{r}
-num_rows <- 10 # Back to 10
+num_rows <- 10
 num_samples <- 20
 df <- data.frame()
 for (p in 2:90) { # 9 original + 9 * 9, intercept added later

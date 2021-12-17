@@ -300,7 +300,7 @@ X &lt;- cbind(X,
   X[,8]*X[,1], X[,8]*X[,2], X[,8]*X[,3], X[,8]*X[,4], X[,8]*X[,5], X[,8]*X[,6], X[,8]*X[,7], X[,8]*X[,8], X[,8]*X[,9],
   X[,9]*X[,1], X[,9]*X[,2], X[,9]*X[,3], X[,9]*X[,4], X[,9]*X[,5], X[,9]*X[,6], X[,9]*X[,7], X[,9]*X[,8], X[,9]*X[,9]
   )</code></pre>
-<pre class="r"><code>num_rows &lt;- 10 # Back to 10
+<pre class="r"><code>num_rows &lt;- 10
 num_samples &lt;- 20
 df &lt;- data.frame()
 for (p in 2:90) { # 9 original + 9 * 9, intercept added later
