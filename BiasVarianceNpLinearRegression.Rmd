@@ -95,12 +95,14 @@ To better illustrate what this code does, let's plot every single sample.  We ca
 ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point() +
   coord_cartesian(ylim = c(0, 300)) 
 ```
+
 Taking the mean error at each amount of p, we recover the usual bias-variance diagram, showing train error always goes down by test error has a sweet spot– a minimum– somewhere in between 0 and 10.
 
 ```{r}
 df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 ```
+
 Train error does go to zero at p=9, when interpolation is possible.  Meanwhile, test error is minimized at p=4, well below that point.
 
 ## Overparameterization
@@ -131,6 +133,7 @@ Here is the plot of the mean train and test error.
 df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 ```
+
 Training error is essentially zero after p=5.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks at p=5, as expected, and then goes down, although slowly.  We have recovered double descent, but it would be good to have more parameters to see if test error in the overparameterized regime can be lower than in the regular regime. 
 
 ### Adding columns with random data
@@ -162,6 +165,7 @@ So how did this work?  I expect higher error overall with all those random colum
 df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point()
 ```
+
 Wow!  The theoretical results are validated!  Up to p=10, we got a fairly straightforward bias-variance diagram.  After tha, train error is zero, as expected, once interpolation is reached.  Test error slowly decreases, even going lower than what we saw in the p < 10 regime.
 
 ### Adding columns with 2nd order effects
@@ -200,6 +204,7 @@ df_long <- pivot_longer(df, train:test)
 df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point()
 ```
+
 Ugly.  I don't see the original bias-variance relationship with p < 10.  Train error should be near zero at p=10.  And test error just keeps going up.  I will look for a bug in my code.
 
 ## References
