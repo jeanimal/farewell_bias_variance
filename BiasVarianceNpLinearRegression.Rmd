@@ -51,8 +51,12 @@ Here is a simple resampling function to generate training and testing errors.  I
 As for regression, the Dar et al. paper used gradient descent to fit a plane in the overparameterized regime.  But here I follow Michael Clark's blog in using "rigdgeless regression," which uses the pseudo inverse of the design matrix.
 
 ```{r}
-# Note: This will add an intercept for you.  No need to add it yourself.
-sample_train_test <- function(X, y, p, n_train) {
+# Samples n_train rows and p columns from X for X_train and y_train.
+# The remaining rows are used for X_test and y_test.
+# Then trains ridgeless regression on the training data and tests on test data.
+# Returns rmse on train, rmse on test (where rmse = root mean square error).
+# Note: This will add intercept to X_train for you.
+sample_train_test <- function(X, y, n_train, p) {
   out <- splitTrainTest(X, y, n_train, p, add_intercept = TRUE)
   result <- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
   return(c(pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
@@ -76,7 +80,7 @@ num_rows <- 10 # Restricted to the number of columns, 10.
 num_samples <- 40
 df <- data.frame()
 for (p in 2:9) {  # Only go up to p=9 because intercept will be 10th.
-  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local <- cbind(rep(p, num_rows), t(out))
   df <- rbind(df, df_local)
 }
@@ -114,7 +118,7 @@ num_rows <- 5 # Lowered so we can see overparametrized regime.
 num_samples <- 100
 df <- data.frame()
 for (p in 2:(ncol(X)-1)) {
-  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local <- cbind(rep(p, num_rows), t(out))
   df <- rbind(df, df_local)
 }
@@ -145,7 +149,7 @@ num_rows <- 10 # Back to 10
 num_samples <- 40
 df <- data.frame()
 for (p in 2:29) { # Increased range of parameters.
-  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local <- cbind(rep(p, num_rows), t(out))
   df <- rbind(df, df_local)
 }
@@ -186,7 +190,7 @@ num_rows <- 10 # Back to 10
 num_samples <- 40
 df <- data.frame()
 for (p in 2:90) { # 9 original + 9 * 9, intercept added later
-  out <- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local <- cbind(rep(p, num_rows), t(out))
   df <- rbind(df, df_local)
 }

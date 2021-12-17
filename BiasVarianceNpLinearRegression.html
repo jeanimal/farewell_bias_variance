@@ -205,8 +205,12 @@ y &lt;- mtcars$mpg # mpg is the first column</code></pre>
 <h2>Sampling function</h2>
 <p>Here is a simple resampling function to generate training and testing errors. It randomly select n_train rows of X and y, and p columns of X, fit a ridgeless regression, and then return the root mean squared error on the training data. The test data uses the non-selected rows (which may be more or less than n_train).</p>
 <p>As for regression, the Dar et al. paper used gradient descent to fit a plane in the overparameterized regime. But here I follow Michael Clark’s blog in using “rigdgeless regression,” which uses the pseudo inverse of the design matrix.</p>
-<pre class="r"><code># Note: This will add an intercept for you.  No need to add it yourself.
-sample_train_test &lt;- function(X, y, p, n_train) {
+<pre class="r"><code># Samples n_train rows and p columns from X for X_train and y_train.
+# The remaining rows are used for X_test and y_test.
+# Then trains ridgeless regression on the training data and tests on test data.
+# Returns rmse on train, rmse on test (where rmse = root mean square error).
+# Note: This will add intercept to X_train for you.
+sample_train_test &lt;- function(X, y, n_train, p) {
   out &lt;- splitTrainTest(X, y, n_train, p, add_intercept = TRUE)
   result &lt;- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
   return(c(pluck(result, &#39;rmse_train&#39;), pluck(result, &#39;rmse_test&#39;)))
@@ -222,7 +226,7 @@ num_rows &lt;- 10 # Restricted to the number of columns, 10.
 num_samples &lt;- 40
 df &lt;- data.frame()
 for (p in 2:9) {  # Only go up to p=9 because intercept will be 10th.
-  out &lt;- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out &lt;- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local &lt;- cbind(rep(p, num_rows), t(out))
   df &lt;- rbind(df, df_local)
 }
@@ -248,7 +252,7 @@ num_rows &lt;- 5 # Lowered so we can see overparametrized regime.
 num_samples &lt;- 100
 df &lt;- data.frame()
 for (p in 2:(ncol(X)-1)) {
-  out &lt;- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out &lt;- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local &lt;- cbind(rep(p, num_rows), t(out))
   df &lt;- rbind(df, df_local)
 }
@@ -271,7 +275,7 @@ X &lt;- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_ra
 num_samples &lt;- 40
 df &lt;- data.frame()
 for (p in 2:29) { # Increased range of parameters.
-  out &lt;- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out &lt;- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local &lt;- cbind(rep(p, num_rows), t(out))
   df &lt;- rbind(df, df_local)
 }
@@ -303,7 +307,7 @@ X &lt;- cbind(X,
 num_samples &lt;- 40
 df &lt;- data.frame()
 for (p in 2:90) { # 9 original + 9 * 9, intercept added later
-  out &lt;- replicate(n=num_samples, sample_train_test(X, y, p, num_rows))
+  out &lt;- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
   df_local &lt;- cbind(rep(p, num_rows), t(out))
   df &lt;- rbind(df, df_local)
 }
