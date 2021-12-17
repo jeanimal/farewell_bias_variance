@@ -80,9 +80,8 @@ num_rows <- 10 # Restricted to the number of columns, 10.
 num_samples <- 40
 df <- data.frame()
 for (p in 2:9) {  # Only go up to p=9 because intercept will be 10th.
-  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
-  df_local <- cbind(rep(p, num_rows), t(out))
-  df <- rbind(df, df_local)
+  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
 df_long <- pivot_longer(df, train:test)
@@ -123,9 +122,8 @@ num_rows <- 10 # Back to 10
 num_samples <- 40
 df <- data.frame()
 for (p in 2:29) { # Increased range of parameters.
-  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
-  df_local <- cbind(rep(p, num_rows), t(out))
-  df <- rbind(df, df_local)
+  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
 df_long <- pivot_longer(df, train:test)
@@ -151,9 +149,8 @@ num_rows <- 5 # Lowered so we can see overparametrized regime.
 num_samples <- 100
 df <- data.frame()
 for (p in 2:(ncol(X)-1)) {
-  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
-  df_local <- cbind(rep(p, num_rows), t(out))
-  df <- rbind(df, df_local)
+  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
 df_long <- pivot_longer(df, train:test)
@@ -189,12 +186,11 @@ X <- cbind(X,
 
 ```{r}
 num_rows <- 10 # Back to 10
-num_samples <- 40
+num_samples <- 20
 df <- data.frame()
 for (p in 2:90) { # 9 original + 9 * 9, intercept added later
-  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
-  df_local <- cbind(rep(p, num_rows), t(out))
-  df <- rbind(df, df_local)
+  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
 df_long <- pivot_longer(df, train:test)
