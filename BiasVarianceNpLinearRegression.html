@@ -204,6 +204,7 @@ y &lt;- mtcars$mpg # mpg is the first column</code></pre>
 <div id="sampling-function" class="section level2">
 <h2>Sampling function</h2>
 <p>Here is a simple resampling function to generate training and testing errors. It randomly select n_train rows of X and y, and p columns of X, fit a ridgeless regression, and then return the root mean squared error on the training data. The test data uses the non-selected rows (which may be more or less than n_train).</p>
+<p>As for regression, the Dar et al. paper used gradient descent to fit a plane in the overparameterized regime. But here I follow Michael Clark’s blog in using “rigdgeless regression,” which uses the pseudo inverse of the design matrix.</p>
 <pre class="r"><code># Note: This will add an intercept for you.  No need to add it yourself.
 sample_train_test &lt;- function(X, y, p, n_train) {
   train_idx &lt;- sample(nrow(X), size=n_train, replace=FALSE)
@@ -245,10 +246,10 @@ df_long &lt;- pivot_longer(df, train:test)</code></pre>
 </div>
 <div id="overparameterization" class="section level2">
 <h2>Overparameterization</h2>
-<p>But of course the interesting part is what happens to overparameterized linear regression! There are several ways to overparameterize.</p>
+<p>But of course the interesting part is what happens to overparameterized linear regression! There are several ways to change the data set to let us see the overparameterized regime– reducing the number of examples/row or adding additional columns.</p>
 <div id="reducing-number-of-rows-sampled-to-move-interpolation-threshold-lower" class="section level3">
 <h3>Reducing number of rows sampled to move interpolation threshold lower</h3>
-<p>One idea to see the overparameterized regime is, instead of increasing the number of parameters, just lower the number of rows. Then we hit the overparameterized regime sooner! For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.</p>
+<p>One idea to see the overparameterized regime is to lower the number of rows. Then we hit the overparameterized regime sooner! For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.</p>
 <pre class="r"><code>X &lt;- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
 num_rows &lt;- 5 # Lowered so we can see overparametrized regime.
 num_samples &lt;- 100

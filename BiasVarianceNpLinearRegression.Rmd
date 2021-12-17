@@ -48,6 +48,8 @@ y <- mtcars$mpg # mpg is the first column
 
 Here is a simple resampling function to generate training and testing errors.  It randomly select n_train rows of X and y, and p columns of X, fit a ridgeless regression, and then return the root mean squared error on the training data.  The test data uses the non-selected rows (which may be more or less than n_train).
 
+As for regression, the Dar et al. paper used gradient descent to fit a plane in the overparameterized regime.  But here I follow Michael Clark's blog in using "rigdgeless regression," which uses the pseudo inverse of the design matrix.
+
 ```{r}
 # Note: This will add an intercept for you.  No need to add it yourself.
 sample_train_test <- function(X, y, p, n_train) {
@@ -108,11 +110,11 @@ Train error does go to zero at p=9, when interpolation is possible.  Meanwhile, 
 ## Overparameterization
 
 But of course the interesting part is what happens to overparameterized linear regression!
-There are several ways to overparameterize.
+There are several ways to change the data set to let us see the overparameterized regime-- reducing the number of examples/row or adding additional columns.
 
 ### Reducing number of rows sampled to move interpolation threshold lower
 
-One idea to see the overparameterized regime is, instead of increasing the number of parameters, just lower the number of rows.  Then we hit the overparameterized regime sooner!  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
+One idea to see the overparameterized regime is to lower the number of rows.  Then we hit the overparameterized regime sooner!  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
 
 ```{r}
 X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
