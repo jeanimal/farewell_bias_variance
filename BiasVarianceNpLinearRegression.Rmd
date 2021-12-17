@@ -53,15 +53,8 @@ As for regression, the Dar et al. paper used gradient descent to fit a plane in 
 ```{r}
 # Note: This will add an intercept for you.  No need to add it yourself.
 sample_train_test <- function(X, y, p, n_train) {
-  train_idx <- sample(nrow(X), size=n_train, replace=FALSE)
-  train_col <- sample((2:ncol(X)), size=p, replace=FALSE)
-  X_train <- X[train_idx, train_col]
-  X_train <- cbind(1, X_train)  # Add intercept.
-  y_train <- y[train_idx]
-  X_test  = X[-(1:n_train), train_col]
-  X_test <- cbind(1, X_test)  # Add intercept.
-  y_test  = y[-(1:n_train)]
-  result <- fit_ridgeless(X_train, y_train, X_test, y_test)
+  out <- splitTrainTest(X, y, n_train, p, add_intercept = TRUE)
+  result <- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
   return(c(pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
 }
 ```
@@ -94,8 +87,7 @@ df_long <- pivot_longer(df, train:test)
 To better illustrate what this code does, let's plot every single sample.  We can see the primary impact of getting near p=10 is to increase the variance– some estimates are good but some are crazy!
 
 ```{r bias-variance1, echo=FALSE}
-ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point() +
-  coord_cartesian(ylim = c(0, 300)) 
+ggplot(df_long, aes(p, value, color=name), group_by(name)) + geom_point()
 ```
 
 Taking the mean error at each amount of p, we recover the usual bias-variance diagram, showing train error always goes down by test error has a sweet spot– a minimum– somewhere in between 0 and 10.

@@ -1,16 +1,23 @@
 # Functions to illustrate the bias-variance trade-off and double descent.
 
-library(psych) # For pseudo-inverse
+library(psych) # For pseudo-inverse.  It uses machine precision.
 
-# TODO(jean): Use and test this.
-splitTrainTest <- function(X, y, n_train, p) {
+# Samples n_train rows and p columns from X for X_train and y_train.
+# The remaining rows are used for X_test and y_test.
+# If add_intercept is true, p+1 columns will be returned for X_train
+#  because the intercept will be included.
+splitTrainTest <- function(X, y, n_train, p, add_intercept) {
   train_idx <- sample(nrow(X), size=n_train, replace=FALSE)
   train_col <- sample((2:ncol(X)), size=p, replace=FALSE)
   X_train <- X[train_idx, train_col]
-  X_train <- cbind(1, X_train)  # Add intercept.
+  if (add_intercept) {
+    X_train <- cbind(1, X_train)
+  }
   y_train <- y[train_idx]
   X_test  <- X[-(1:n_train), train_col]
-  X_test <- cbind(1, X_test)  # Add intercept.
+  if (add_intercept) {
+    X_test <- cbind(1, X_test)
+  }
   y_test  <- y[-(1:n_train)]
   list (
     X_train = X_train,
@@ -19,6 +26,30 @@ splitTrainTest <- function(X, y, n_train, p) {
     y_test = y_test
   )
 }
+
+# Simple unit tests of splitTrainTest
+X <- data.frame(a=c(1,2,3), b=c(11, 12, 13), c=c(101, 102, 103),
+                d=c(1001, 1002, 1003), e=c(1001, 1002, 1003))
+y <- c(1.1, 2.2, 3.3)
+
+out <- splitTrainTest(X, y, n_train=2, p=3, add_intercept=FALSE)
+stopifnot(ncol(out$X_train)==3)
+stopifnot(nrow(out$X_train)==2)
+stopifnot(length(out$y_train)==2)
+
+stopifnot(ncol(out$X_test)==3)
+stopifnot(nrow(out$X_test)==1)
+stopifnot(length(out$y_test)==1)
+
+out <- splitTrainTest(X, y, 2, 3, add_intercept=TRUE)
+stopifnot(ncol(out$X_train)==3+1) # +1 for intercept.
+stopifnot(nrow(out$X_train)==2)
+stopifnot(length(out$y_train)==2)
+
+stopifnot(ncol(out$X_test)==3+1) # +1 for intercept.
+stopifnot(nrow(out$X_test)==1)
+stopifnot(length(out$y_test)==1)
+
 
 # We need a form of linear regression that can handle more parameters than rows-- 
 # that is, the overparameterized case.
