@@ -108,35 +108,9 @@ Train error does go to zero at p=9, when interpolation is possible.  Meanwhile, 
 But of course the interesting part is what happens to overparameterized linear regression!
 There are several ways to change the data set to let us see the overparameterized regime-- reducing the number of examples/row or adding additional columns.
 
-### Reducing number of rows sampled to move interpolation threshold lower
-
-One idea to see the overparameterized regime is to lower the number of rows.  Then we hit the overparameterized regime sooner!  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
-
-```{r}
-X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
-num_rows <- 5 # Lowered so we can see overparametrized regime.
-num_samples <- 100
-df <- data.frame()
-for (p in 2:(ncol(X)-1)) {
-  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
-  df_local <- cbind(rep(p, num_rows), t(out))
-  df <- rbind(df, df_local)
-}
-colnames(df) <- c("p", "train", "test")
-df_long <- pivot_longer(df, train:test)
-```
-
-Here is the plot of the mean train and test error.
-```{r}
-df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
-ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
-```
-
-Training error is essentially zero after p=5.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks at p=5, as expected, and then goes down, although slowly.  We have recovered double descent, but it would be good to have more parameters to see if test error in the overparameterized regime can be lower than in the regular regime. 
-
 ### Adding columns with random data
 
-Okay, now let's go back to the most straightforward solution of adding columns.  I will start by just adding 20 columns with normally distributed random data.
+Let's try the easiest way to add columns: add random data.  I will add 20 columns with normally distributed random data.
 
 ```{r}
 X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y
@@ -164,7 +138,35 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point()
 ```
 
-Wow!  The theoretical results are validated!  Up to p=10, we got a fairly straightforward bias-variance diagram.  After tha, train error is zero, as expected, once interpolation is reached.  Test error slowly decreases, even going lower than what we saw in the p < 10 regime.
+Wow!  The theoretical results are validated!  Up to p=9-- meaning p=10 with the intercept-- we got a fairly standard bias-variance diagram: train error goes down while test error goes up.  For p>=9, train error is zero, as expected, because the model can interpolate the data.  For p >= 9, test error slowly decreases, showing double descent, eventually going lower than the lowest error we saw in the p < 10 regime.
+
+
+### Reducing number of rows sampled to move interpolation threshold lower
+
+Another idea to see the overparameterized regime is to lower the number of rows.  Then we hit the overparameterized regime for lower p.  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
+
+```{r}
+X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
+num_rows <- 5 # Lowered so we can see overparametrized regime.
+num_samples <- 100
+df <- data.frame()
+for (p in 2:(ncol(X)-1)) {
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p))
+  df_local <- cbind(rep(p, num_rows), t(out))
+  df <- rbind(df, df_local)
+}
+colnames(df) <- c("p", "train", "test")
+df_long <- pivot_longer(df, train:test)
+```
+
+Here is the plot of the mean train and test error.
+```{r}
+df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
+ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
+```
+
+Training error is essentially zero after p=5.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks at p=5, as expected, and then goes down, although slowly.  We have recovered double descent, but it would be good to have more parameters to see if test error in the overparameterized regime can be lower than in the regular regime. 
+
 
 ### Adding columns with 2nd order effects
 
