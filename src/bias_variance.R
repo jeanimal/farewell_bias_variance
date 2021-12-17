@@ -8,13 +8,13 @@ library(psych) # For pseudo-inverse.  It uses machine precision.
 #  because the intercept will be included.
 splitTrainTest <- function(X, y, n_train, p, add_intercept) {
   train_idx <- sample(nrow(X), size=n_train, replace=FALSE)
-  train_col <- sample((2:ncol(X)), size=p, replace=FALSE)
-  X_train <- X[train_idx, train_col]
+  col <- sample((2:ncol(X)), size=p, replace=FALSE)
+  X_train <- X[train_idx, col]
   if (add_intercept) {
     X_train <- cbind(1, X_train)
   }
   y_train <- y[train_idx]
-  X_test  <- X[-(1:n_train), train_col]
+  X_test  <- X[-(1:n_train), col]
   if (add_intercept) {
     X_test <- cbind(1, X_test)
   }
