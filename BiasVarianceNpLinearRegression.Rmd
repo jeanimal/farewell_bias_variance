@@ -52,7 +52,7 @@ splitTrainTest
 
 Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.
 
-Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark's blog in using rigdeless regression, which uses the pseudo inverse of the design matrix.  I can get the same effects with a lot less computation time.  (Ridgeless regression was also analytically studied in Hastie et al. 2019).
+Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark's blog in using ridgeless regression to get the same effects with a lot less computation time.  (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero.  The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).
 
 ```{r}
 # Samples n_train rows and p columns from X for X_train and y_train.
@@ -201,7 +201,7 @@ X <- cbind(X,
 num_rows <- 10
 num_samples <- 20
 df <- data.frame()
-for (p in 2:45) { # 9 original + 9 * 9, intercept added later
+for (p in 2:45) { # 9 original + 9 * 9/2, intercept added later
   out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p, add_intercept = TRUE))
   df <- rbind(df, t(out))
 }
