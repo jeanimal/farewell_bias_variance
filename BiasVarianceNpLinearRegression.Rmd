@@ -1,7 +1,7 @@
 ---
 title: "Farewell to Bias-Variance Tradeoff: A study with linear regression"
-author: "Jean Ortega"
-date: "12/15/2021"
+author: "Jean Czerlinski Ortega"
+date: "12/19/2021"
 output: html_document
 ---
 
@@ -36,19 +36,23 @@ Get the data
 data(mtcars)
 ```
 
-Below w set up our X matrix of input data (replacing the y column with a column of 1's for the intercept).  Then we set up the y vector to be predicted, which is miles per gallon per car.
+
+## Relevant functions
+
+Below is the simple resampling function to generate training and testing data.
+
+* It randomly selects n_train rows of X and y
+* The remaining rows are used for test data for X and y
+* I also randomely selects p columns of X for use in both train and test.
 
 ```{r}
-X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
-y <- mtcars$mpg # mpg is the first column
+splitTrainTest
 ```
 
 
-## Sampling function
+Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.
 
-Here is a simple resampling function to generate training and testing errors.  It randomly select n_train rows of X and y, and p columns of X, fit a ridgeless regression, and then return the root mean squared error on the training data.  The test data uses the non-selected rows (which may be more or less than n_train).
-
-As for regression, the Dar et al. paper used gradient descent to fit a plane in the overparameterized regime.  But here I follow Michael Clark's blog in using "rigdgeless regression," which uses the pseudo inverse of the design matrix.
+Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark's blog in using rigdeless regression, which uses the pseudo inverse of the design matrix.  I can get the same effects with a lot less computation time.  (Ridgeless regression was also analytically studied in Hastie et al. 2019).
 
 ```{r}
 # Samples n_train rows and p columns from X for X_train and y_train.
@@ -72,11 +76,18 @@ set.seed(1)
 
 ## Basic bias-variance
 
-There are only 10 columns in the mtcars data set (including the intercept).  Since p, the number of parameters, can only range to 10, we can take at most 10 rows of data.  For each sample of rows and columns, we calculate train and test error.  We do this for 20 samples.
+Below we set up our X matrix of input data, removing the miles per gallon column because that is what we will prdected.  (The intercept will be added later.)  Then we set up the y vector to be predicted.
 
 ```{r}
 X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
-num_rows <- 10 # Restricted to the number of columns, 10.
+y <- mtcars$mpg # mpg is the first column
+```
+
+There are only 9 columns in the X(after removing mpg) and we will add the intercept in code, resulting in a total of 10 predictors, so we can take at most 10 rows of data to stay within the underparametrized regime.  For each sample of rows and columns, we calculate train and test error.  We do this for 40 samples.
+
+
+```{r}
+num_rows <- 10 # Because X has 9 columns plus the intercept.
 num_samples <- 40
 df <- data.frame()
 for (p in 2:9) {  # Only go up to p=9 because intercept will be 10th.
@@ -138,15 +149,16 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
 
 Wow!  The theoretical results are validated!  Up to p=9-- meaning p=10 with the intercept-- we got a fairly standard bias-variance diagram: train error goes down while test error goes up.  For p>=9, train error is zero, as expected, because the model can interpolate the data.  For p >= 9, test error slowly decreases, showing double descent, eventually going lower than the lowest error we saw in the p < 10 regime.
 
+However, I am shocked that the **global** minimum is attained in the regime where extra **purely random** columns are added.  I am familiar with the idea that noise can act like a regularizer, but usually it is injected as "real data + noise" (among other ways).  But I am shocked that pure noise columns have this beneficial effect.
 
 ### Reducing number of rows sampled to move interpolation threshold lower
 
-Another idea to see the overparameterized regime is to lower the number of rows.  Then we hit the overparameterized regime for lower p.  For example, if num_rows is 5, then interpolation is achieved at p=5, and after that it is overparametrized.
+Another idea to see the overparameterized regime is to lower the number of rows.  Then we hit the overparameterized regime for lower p.  For example, if num_rows is 4, then interpolation is achieved at p=3 + 1 intercent, and for higher p it is overparametrized.
 
 ```{r}
 X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y.
-num_rows <- 5 # Lowered so we can see overparametrized regime.
-num_samples <- 100
+num_rows <- 4 # Lowered so we can see overparametrized regime.
+num_samples <- 200
 df <- data.frame()
 for (p in 2:(ncol(X)-1)) {
   out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
@@ -162,7 +174,7 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 ```
 
-Training error is essentially zero after p=5.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks at p=5, as expected, and then goes down, although slowly.  We have recovered double descent, but it would be good to have more parameters to see if test error in the overparameterized regime can be lower than in the regular regime. 
+Training error is mostly zero after p=4.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks close to p=3 (but why p=4?) and then goes down, although slowly.  We have recovered double descent without random data, although the limit on number of parameters does not let us explore it much. 
 
 
 ### Adding columns with 2nd order effects
@@ -173,14 +185,14 @@ Okay, now let's try another way of adding columns.  Let's try every combination 
 X <- as.matrix(mtcars[, -1])
 X <- cbind(X,
   X[,1]*X[,1], X[,1]*X[,2], X[,1]*X[,3], X[,1]*X[,4], X[,1]*X[,5], X[,1]*X[,6], X[,1]*X[,7], X[,1]*X[,8], X[,1]*X[,9],
-  X[,2]*X[,1], X[,2]*X[,2], X[,2]*X[,3], X[,2]*X[,4], X[,2]*X[,5], X[,2]*X[,6], X[,2]*X[,7], X[,2]*X[,8], X[,2]*X[,9],
-  X[,3]*X[,1], X[,3]*X[,2], X[,3]*X[,3], X[,3]*X[,4], X[,3]*X[,5], X[,3]*X[,6], X[,3]*X[,7], X[,3]*X[,8], X[,3]*X[,9],
-  X[,4]*X[,1], X[,4]*X[,2], X[,4]*X[,3], X[,4]*X[,4], X[,4]*X[,5], X[,4]*X[,6], X[,4]*X[,7], X[,4]*X[,8], X[,4]*X[,9],
-  X[,5]*X[,1], X[,5]*X[,2], X[,5]*X[,3], X[,5]*X[,4], X[,5]*X[,5], X[,5]*X[,6], X[,5]*X[,7], X[,5]*X[,8], X[,5]*X[,9],
-  X[,6]*X[,1], X[,6]*X[,2], X[,6]*X[,3], X[,6]*X[,4], X[,6]*X[,5], X[,6]*X[,6], X[,6]*X[,7], X[,6]*X[,8], X[,6]*X[,9],
-  X[,7]*X[,1], X[,7]*X[,2], X[,7]*X[,3], X[,7]*X[,4], X[,7]*X[,5], X[,7]*X[,6], X[,7]*X[,7], X[,7]*X[,8], X[,7]*X[,9],
-  X[,8]*X[,1], X[,8]*X[,2], X[,8]*X[,3], X[,8]*X[,4], X[,8]*X[,5], X[,8]*X[,6], X[,8]*X[,7], X[,8]*X[,8], X[,8]*X[,9],
-  X[,9]*X[,1], X[,9]*X[,2], X[,9]*X[,3], X[,9]*X[,4], X[,9]*X[,5], X[,9]*X[,6], X[,9]*X[,7], X[,9]*X[,8], X[,9]*X[,9]
+               X[,2]*X[,2], X[,2]*X[,3], X[,2]*X[,4], X[,2]*X[,5], X[,2]*X[,6], X[,2]*X[,7], X[,2]*X[,8], X[,2]*X[,9],
+                           X[,3]*X[,3], X[,3]*X[,4], X[,3]*X[,5], X[,3]*X[,6], X[,3]*X[,7], X[,3]*X[,8], X[,3]*X[,9],
+                                         X[,4]*X[,4], X[,4]*X[,5], X[,4]*X[,6], X[,4]*X[,7], X[,4]*X[,8], X[,4]*X[,9],
+                                                      X[,5]*X[,5], X[,5]*X[,6], X[,5]*X[,7], X[,5]*X[,8], X[,5]*X[,9],
+                                                                   X[,6]*X[,6], X[,6]*X[,7], X[,6]*X[,8], X[,6]*X[,9],
+                                                                                X[,7]*X[,7], X[,7]*X[,8], X[,7]*X[,9],
+  X[,8]*X[,8], X[,8]*X[,9],
+  X[,9]*X[,9]
   )
 ```
 
@@ -188,7 +200,7 @@ X <- cbind(X,
 num_rows <- 10
 num_samples <- 20
 df <- data.frame()
-for (p in 2:90) { # 9 original + 9 * 9, intercept added later
+for (p in 2:45) { # 9 original + 9 * 9, intercept added later
   out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
   df <- rbind(df, t(out))
 }
@@ -201,8 +213,12 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point()
 ```
 
-Ugly.  I don't see the original bias-variance relationship with p < 10.  Train error should be near zero at p=10.  And test error just keeps going up.  I will look for a bug in my code.
+Huh?  I don't see the original bias-variance relationship with p < 10.  Train error should be near zero at p=10.  And test error just keeps going up.  I will look for a bug in my code.
 
 ## References
 
+Clark, Michael. (2021, Nov. 13). Double Descent. Retrieved from https://m-clark.github.io/posts/2021-10-30-double-descent/
+
 Dar, Yehuda, Vidya Muthukumar, and Richard G Baraniuk. 2021. “A Farewell to the Bias-Variance Tradeoff? An Overview of the Theory of Overparameterized Machine Learning.” arXiv Preprint arXiv:2109.02355.
+
+Hastie, Trevor, Andrea Montanari, Saharon Rosset, and Ryan J Tibshirani. 2019. “Surprises in High-Dimensional Ridgeless Least Squares Interpolation.” arXiv Preprint arXiv:1903.08560.
