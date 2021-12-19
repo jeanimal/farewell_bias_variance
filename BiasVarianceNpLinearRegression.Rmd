@@ -57,13 +57,13 @@ Note that the Dar et al. paper used gradient descent to fit the linear model, bu
 ```{r}
 # Samples n_train rows and p columns from X for X_train and y_train.
 # The remaining rows are used for X_test and y_test.
-# Then trains ridgeless regression on the training data and tests on test data.
-# Returns rmse on train, rmse on test (where rmse = root mean square error).
-# Note: This will add intercept to X_train for you.
-sample_train_test <- function(X, y, n_train, p) {
-  out <- splitTrainTest(X, y, n_train, p, add_intercept = TRUE)
+# Then trains ridgeless regression on the training data and measures error on both data sets.
+# Returns # parameters, rmse on train, rmse on test (where rmse = root mean square error).
+# Note: # parameters will be p if add_intercewpt is false and p+1 if add_intercept is true.
+sample_train_test <- function(X, y, n_train, p, add_intercept = TRUE) {
+  out <- splitTrainTest(X, y, n_train, p, add_intercept)
   result <- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
-  return(c(pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
+  return(c(ncol(out$X_train), pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
 }
 ```
 
@@ -91,7 +91,7 @@ num_rows <- 10 # Because X has 9 columns plus the intercept.
 num_samples <- 40
 df <- data.frame()
 for (p in 2:9) {  # Only go up to p=9 because intercept will be 10th.
-  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p, add_intercept = TRUE))
   df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
@@ -133,7 +133,7 @@ num_rows <- 10
 num_samples <- 40
 df <- data.frame()
 for (p in 2:29) { # Increased range of parameters.
-  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p, add_intercept = TRUE))
   df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
@@ -161,7 +161,7 @@ num_rows <- 4 # Lowered so we can see overparametrized regime.
 num_samples <- 200
 df <- data.frame()
 for (p in 2:(ncol(X)-1)) {
-  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p, add_intercept = TRUE))
   df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
@@ -201,7 +201,7 @@ num_rows <- 10
 num_samples <- 20
 df <- data.frame()
 for (p in 2:45) { # 9 original + 9 * 9, intercept added later
-  out <- replicate(n=num_samples, c(p, sample_train_test(X, y, num_rows, p)))
+  out <- replicate(n=num_samples, sample_train_test(X, y, num_rows, p, add_intercept = TRUE))
   df <- rbind(df, t(out))
 }
 colnames(df) <- c("p", "train", "test")
