@@ -224,7 +224,7 @@ pre code {
 ##     list(X_train = X_train, y_train = y_train, X_test = X_test, 
 ##         y_test = y_test)
 ## }
-## &lt;bytecode: 0x7fc467d44438&gt;</code></pre>
+## &lt;bytecode: 0x7fde214f10b8&gt;</code></pre>
 <p>Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.</p>
 <p>Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark’s blog in using rigdeless regression, which uses the pseudo inverse of the design matrix. I can get the same effects with a lot less computation time. (Ridgeless regression was also analytically studied in Hastie et al. 2019).</p>
 <pre class="r"><code># Samples n_train rows and p columns from X for X_train and y_train.
@@ -235,6 +235,7 @@ pre code {
 sample_train_test &lt;- function(X, y, n_train, p, add_intercept = TRUE) {
   out &lt;- splitTrainTest(X, y, n_train, p, add_intercept)
   result &lt;- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
+  # number of parameters, rmse on train, rmse on test
   return(c(ncol(out$X_train), pluck(result, &#39;rmse_train&#39;), pluck(result, &#39;rmse_test&#39;)))
 }</code></pre>
 <p>Let’s also make all code after here reproducible with this seed. Feel free to change / remove so you can run your own experiments.</p>

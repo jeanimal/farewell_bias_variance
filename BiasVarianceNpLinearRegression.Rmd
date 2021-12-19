@@ -63,6 +63,7 @@ Note that the Dar et al. paper used gradient descent to fit the linear model, bu
 sample_train_test <- function(X, y, n_train, p, add_intercept = TRUE) {
   out <- splitTrainTest(X, y, n_train, p, add_intercept)
   result <- fit_ridgeless(out$X_train, out$y_train, out$X_test, out$y_test)
+  # number of parameters, rmse on train, rmse on test
   return(c(ncol(out$X_train), pluck(result, 'rmse_train'), pluck(result, 'rmse_test')))
 }
 ```
