@@ -150,7 +150,34 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
 
 Wow!  The theoretical results are validated!  Up to p=9-- meaning p=10 with the intercept-- we got a fairly standard bias-variance diagram: train error goes down while test error goes up.  For p>=9, train error is zero, as expected, because the model can interpolate the data.  For p >= 9, test error slowly decreases, showing double descent, eventually going lower than the lowest error we saw in the p < 10 regime.
 
-However, I am shocked that the **global** minimum is attained in the regime where extra **purely random** columns are added.  I am familiar with the idea that noise can act like a regularizer, but usually it is injected as "real data + noise" (among other ways).  But I am shocked that pure noise columns have this beneficial effect.
+#### Interpretation
+
+Notice that the **global** test error minimum is attained in the regime with more columns-- at p=30, meaning all the parameters  However, look at the amount of minimum test error attained, just under 5.  If you look back at the bias-variance diagram from the fit where only mtcars columns were used (no random columns), the minimum test error attained was just under 4.  In other words, the lowest test error was achieved when the fit had just the substantive parameters-- that is, a well-specified model-- without all the extra noise columns.  A small model with well-specified parameters attained better test error than a large model with a grab-bag of parameters.
+
+That said, in real life we do not always know or have access to just the substantive parameters.  In that case, collecting more and more parameters of data can give us a chance of getting some substantive ones, and that is when increasing the number of parameters helps.  As Dar et al. point out, this is akin to taking an ensemble of models or boosting or the strength of weak learners.  
+
+Below is an example of the grab-bag of parameters we get for different values of p.  Columns with a name are original to the mtcars data set.  Columns without a name contain random data.  As you can see, the higher p is, the more columns of useful mtcars data we get.
+
+*P=5*
+```{r}
+colnames(splitTrainTest(X, y, n_train=2, p=5, add_intercept=FALSE)$X_train)
+```
+
+*P=10*
+```{r}
+colnames(splitTrainTest(X, y, n_train=2, p=10, add_intercept=FALSE)$X_train)
+```
+
+*P=20*
+```{r}
+colnames(splitTrainTest(X, y, n_train=2, p=20, add_intercept=FALSE)$X_train)
+```
+
+
+Clearly,p=30 gets all the mtcars columns on every sample, and that's why it attains the lowest test error.  (Perhaps I should have used sampling with replacement to avoid this artificial effect.)
+
+As an aside, there are quite a few papers explaining how noise can act like a regularizer, but usually noise is injected as additional rows of "real data + noise" (among other ways).  I was surprised that pure noise columns also had an interesting effect.
+
 
 ### Reducing number of rows sampled to move interpolation threshold lower
 
