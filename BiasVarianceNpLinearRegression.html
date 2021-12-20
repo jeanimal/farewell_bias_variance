@@ -190,10 +190,9 @@ pre code {
 ## ✓ tidyr   1.1.4     ✓ stringr 1.4.0
 ## ✓ readr   2.1.1     ✓ forcats 0.5.1</code></pre>
 <pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## x ggplot2::%+%()   masks psych::%+%()
-## x ggplot2::alpha() masks psych::alpha()
-## x dplyr::filter()  masks stats::filter()
-## x dplyr::lag()     masks stats::lag()</code></pre>
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+## x dplyr::select() masks MASS::select()</code></pre>
 <pre class="r"><code>library(ggplot2)</code></pre>
 <p>Get the data</p>
 <pre class="r"><code>data(mtcars)</code></pre>
@@ -224,7 +223,7 @@ pre code {
 ##     list(X_train = X_train, y_train = y_train, X_test = X_test, 
 ##         y_test = y_test)
 ## }
-## &lt;bytecode: 0x7f843ad02080&gt;</code></pre>
+## &lt;bytecode: 0x7f911db96898&gt;</code></pre>
 <p>Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.</p>
 <p>Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark’s blog in using ridgeless regression to get the same effects with a lot less computation time. (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero. The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).</p>
 <pre class="r"><code># Samples n_train rows and p columns from X for X_train and y_train.

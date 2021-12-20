@@ -1,6 +1,6 @@
 # Functions to illustrate the bias-variance trade-off and double descent.
 
-library(psych) # For pseudo-inverse.  It uses machine precision.
+library(MASS) # For pseudo-inverse.
 
 # Samples n_train rows and p columns from X for X_train and y_train.
 # The remaining rows are used for X_test and y_test.
@@ -63,8 +63,8 @@ stopifnot(length(out$y_test)==1)
 fit_ridgeless = function(X_train, y, X_test, y_test){
   # get the coefficient estimates
   # Note: The pseudo-inverse function can have a lot of rounding error.
-  # If you do not use the one from the psych package, choose wisely.
-  b <- psych::Pinv(crossprod(X_train)) %*% crossprod(X_train, y)
+  # If you do not use the one from the MASS package, choose wisely.
+  b <- MASS::ginv(crossprod(X_train)) %*% crossprod(X_train, y)
   
   # get training/test predictions
   predictions_train <- X_train %*% b
