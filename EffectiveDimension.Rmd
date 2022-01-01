@@ -1,5 +1,5 @@
 ---
-title: "EffectiveDimension"
+title: "Effective and Intrinsic Dimension"
 author: "Jean Czerlinski Ortega"
 date: "1/1/2022"
 output: html_document
@@ -9,9 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Goal
+
+The goal was to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function.
+
+I later realized I also need to estimate the intrinsic dimension.  It takes into account the **signal** structure because effective dimension of the data does not adjust for noise.  
+
 ## Set up
 
-Load the custom function.
+The code below loads the custom function, originally from provided by Marco Del Giudice (2020) with source at https://figshare.com/articles/code/R_function_for_effective_dimensionality_ED_estimation_v_1_/11954661?file=22008351.  
+
+I made a minor modification to offer printing of the eigenvalues.
 
 ```{r}
 source("src/estimate.ED.R")
@@ -20,21 +28,21 @@ source("src/estimate.ED.R")
 
 ## Effective dimension
 
-I tried to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function provided by Marco Del Giudice at https://figshare.com/articles/code/R_function_for_effective_dimensionality_ED_estimation_v_1_/11954661?file=22008351.  
+I tried to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function 
 
 I was a bit surprised by the output, so I modified it to print the eigenvalues, too.
 
+First look at the original `mtcars` data set. I found the effective dimension function returns 3.46 using Shannon entropy H1 (n1) and 2.45 using quadratic entropy H2 (n2).
 ```{r}
 # Recreate data.  Drop the "y" column.
 df <- mtcars[, -1]
 # Evaluate.
 print(paste0("ncol: ", ncol(df)))
 estimate.ED(df)
-# Returns 3.46 using Shannon entropy H1 (n1) and 2.45 using quadratic entropy H2 (n2)
 ```
 
 
-Recreating `mtcars with rand`....
+Recreating `mtcars with rand` data set.  I found the effective dimension function returns 15.29 using Shannon entropy H1 (n1) and 10.86 using quadratic entropy H2 (n2).
 ```{r}
 # Recreate data.
 set.seed(1)
@@ -45,11 +53,96 @@ df <- data.frame(X)
 # Evaluate.
 print(paste0("ncol: ", ncol(df)))
 estimate.ED(df)
-# Returns 15.29 using Shannon entropy H1 (n1) and 10.86 using quadratic entropy H2 (n2)
 ```
+## Discussion
 
 I had expected the dimensions to be very close.  Why did adding a bunch of random columns increase the effective dimensionality?
 
+I failed to distinguish the effective dimension from the intrinsic dimension.  Del Guidice explains the differene:
+
+```
+The ED of a set of variables is a continuous measure of its total dimensionality, without distinction between signal and noise. In contrast, intrinsic dimensionality (ID) is defined as the minimum number of variables needed to accurately describe the important features of the system 
+```
+
+And specifically with regard to adding noise, it will increase the ED (but not the ID):
+
+```
+As the amount of noise increases, correlations among variables become weaker and the estimated ED increases accordingly (see Cangelosi & Goriely, 2007). 
+```
+
+When I go back to the paper by Dar et al. (2021) they require both signal structure and the data's effective dimensionality to be low, and also that the high-signal dimensions be aligned.
+
+## Intrinsic dimension
+
+My goal is to show the intrinsic dimension is about the same in both data sets, with and without noise.
+
+There is no "gold standard" for estimating the intrinsic dimension.  Here I use principal components analysis (PCA) .  R's prcomp fucntion uses singular value decomposition by default.  (We don't want to use eigenvalue analysis because we just used it for the effective dimension estimation!)
+
+### mtcars with random
+
+First let me analyze `mtcars with random` because it is already in memory.
+```{r}
+pca <- prcomp(df, scale. = TRUE)
+pca_var <- pca$sdev^2
+pca_var_perc <- round(pca_var/sum(pca_var) * 100, 1)
+barplot(pca_var_perc, main = "mtcars with random", xlab = "principal components", ylab = "percentage variance", ylim = c(0, 100))
+PC1 <- pca$rotation[,1]
+PC1_scores <- abs(PC1)
+PC1_scores_ordered <- sort(PC1_scores, decreasing = TRUE)
+```
+
+```{r}
+PC1 <- pca$rotation[,1]
+PC1_scores <- abs(PC1)
+PC1_scores_ordered <- sort(PC1_scores, decreasing = TRUE)
+PC1_scores_ordered
+```
+Fortunately we see that all the top principal component weights are assigned to the named variables.  The columns given arbitrary names (e.g. v19) were the randomly-generated columns.
+
+As a super simple rule of thumb tp estimate intrinsic dimension, below is how many PCA dimensions we get if we only use variables with a weight of at least 0.25.
+
+```{r}
+length(PC1_scores_ordered[PC1_scores_ordered > 0.25])
+```
+
+We got 7 intrinsic dimensions.  We will compare this with the other data set.
+
+### mtcars
+
+Now back to the original `mtcars` data set.
+```{r}
+df <- mtcars[, -1]
+pca <- prcomp(df, scale. = TRUE)
+pca_var_perc <- round(pca_var/sum(pca_var) * 100, 1)
+barplot(pca_var_perc, main = "mtcars", xlab = "principal components", ylab = "percentage variance", ylim = c(0, 100))
+```
+
+Note that this plot looks very similar to the previous one, which is good!  The PCA did not change much with or without noise.
+
+```{r}
+PC1 <- pca$rotation[,1]
+PC1_scores <- abs(PC1)
+PC1_scores_ordered <- sort(PC1_scores, decreasing = TRUE)
+PC1_scores_ordered
+```
+
+This is the same initial ordering as in the `mtcars with random` data set.  All is well.
+
+Now let's re-use our super simple rule of thumb of keeping only variables with a weight of at least 0.25-- what instrinsic dimensionality do we get?
+
+```{r}
+length(PC1_scores_ordered[PC1_scores_ordered > 0.25])
+```
+
+We got 7 dimensions again.  Noise did not affect the intrinsic dimension.  Yay!!!
+
+
+## Alignment
+
+Note that here I am not proving that either data set has alignment. I know it is true by how I constructed the data set.  But I could empirically compare each data set's top PCA component directions  are aligned with its top effective dimensions / eigenvectors.  Some day...
+
 ## References
 
-Giudice, M.D. Effective Dimensionality: A Tutorial. Multivar. Behav. Res. 2020, 1–16. doi:10.1080/00273171.2020.1743631.
+Dar, Yehuda, Vidya Muthukumar, and Richard G Baraniuk. 2021. “A Farewell to the Bias-Variance Tradeoff? An Overview of the Theory of Overparameterized Machine Learning.” arXiv Preprint arXiv:2109.02355.
+
+Del Giudice, M.D. Effective Dimensionality: A Tutorial. Multivar. Behav. Res. 2020, 1–16. doi:10.1080/00273171.2020.1743631.
