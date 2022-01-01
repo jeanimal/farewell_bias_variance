@@ -198,10 +198,13 @@ At first, I was surprised that adding purely random cues demonstrated double des
 
 But re-reading the Dar et al. paper, I noticed these two (of three) conditions in section 3.1.3 for double descent:
 
-1. low effective dimension in data
-2. an overparameterized number of low-value (but non-zero signal) features
+1. Low-dimensional signal structure in the data
+2. Low effective dimension in the data
+2. An overparameterized number of low-value (but non-zero signal) features
 
 Clearly the `mtcars with random` data set has low effective dimension when there are 10 mtcars columns (which should mostly have signal) and 20 random columns.  The second condition is met because sampling p of these 30 columns has an 0.3 probability of getting an mtcars column (which is signal) as opposed to a non-signal random column.  The "low but non-zero signal value" applies to the expectation for the column in the data set rather than requiring each column individually to have a low but non-zero signal value.
+
+See the related article [EffectiveDimensions](./EffectiveDimensions.html) for empirical calculations of the dimensions in the data (the first two conditions). 
 
 The other data sets I tried did not clearly meet these two conditions, and they failed to show double descent.
 
@@ -230,8 +233,9 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 
 Training error is mostly zero after p=4.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks close to p=3 (but why p=4?) and then goes down, although slowly.  We have recovered double descent without random data, although the limit on number of parameters does not let us explore it much. However, it is quite possible that the lowest error would be in underparameterized regime because these two conditions are not clearly satisfied:
 
-1. low effective dimension in data
-2. an overparameterized number of low-value (but non-zero signal) features
+1. Low signal structure in the data
+2. Low effective dimension in the data
+2. An overparameterized number of low-value (but non-zero signal) features
 
 ### Adding columns with 2nd order effects
 
@@ -273,8 +277,9 @@ I do not see the original bias-variance relationship with p < 10.  Train error s
 
 As for the test error going up and up, that is not necessarily a bug.  Adding columns with second order effects would not satisfy these conditions:
 
-1. low effective dimension in data
-2. an overparameterized number of low-value (but non-zero signal) features
+1. Low signal structure in the data
+2. Low effective dimension in the data
+2. An overparameterized number of low-value (but non-zero signal) features
 
 ## References
 
