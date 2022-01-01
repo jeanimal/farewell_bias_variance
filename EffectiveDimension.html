@@ -174,7 +174,7 @@ pre code {
 <div id="goal" class="section level2">
 <h2>Goal</h2>
 <p>The goal was to empirically estimate the effective dimension in both the <code>mtcars</code> and <code>mtcars with random</code> data sets using an R function.</p>
-<p>I later realized I also need to estimate the intrinsic dimension. It takes into account the <strong>signal</strong> structure because effective dimension of the data does not adjust for noise.</p>
+<p>I later realized I also need to estimate the intrinsic dimension (ID), so I added an estimation of ID. Intrinsic dimension takes into account the <strong>signal</strong> structure because effective dimension of the data does not adjust for noise.</p>
 </div>
 <div id="set-up" class="section level2">
 <h2>Set up</h2>
@@ -281,7 +281,7 @@ PC1_scores_ordered</code></pre>
 <p>As a super simple rule of thumb tp estimate intrinsic dimension, below is how many PCA dimensions we get if we only use variables with a weight of at least 0.25.</p>
 <pre class="r"><code>length(PC1_scores_ordered[PC1_scores_ordered &gt; 0.25])</code></pre>
 <pre><code>## [1] 6</code></pre>
-<p>We got 7 intrinsic dimensions. We will compare this with the other data set.</p>
+<p>We got 6 intrinsic dimensions. We will compare this with the other data set.</p>
 </div>
 <div id="mtcars" class="section level3">
 <h3>mtcars</h3>
@@ -304,7 +304,7 @@ PC1_scores_ordered</code></pre>
 <p>Now let’s re-use our super simple rule of thumb of keeping only variables with a weight of at least 0.25– what instrinsic dimensionality do we get?</p>
 <pre class="r"><code>length(PC1_scores_ordered[PC1_scores_ordered &gt; 0.25])</code></pre>
 <pre><code>## [1] 6</code></pre>
-<p>We got 7 dimensions again. Noise did not affect the intrinsic dimension. Yay!!!</p>
+<p>We got 6 intrinsic dimensions again. Noise did not affect the intrinsic dimension. Yay!!!</p>
 </div>
 </div>
 <div id="alignment" class="section level2">

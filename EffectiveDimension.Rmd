@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The goal was to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function.
 
-I later realized I also need to estimate the intrinsic dimension.  It takes into account the **signal** structure because effective dimension of the data does not adjust for noise.  
+I later realized I also need to estimate the intrinsic dimension (ID), so I added an estimation of ID.  Intrinsic dimension takes into account the **signal** structure because effective dimension of the data does not adjust for noise.  
 
 ## Set up
 
@@ -105,7 +105,7 @@ As a super simple rule of thumb tp estimate intrinsic dimension, below is how ma
 length(PC1_scores_ordered[PC1_scores_ordered > 0.25])
 ```
 
-We got 7 intrinsic dimensions.  We will compare this with the other data set.
+We got 6 intrinsic dimensions.  We will compare this with the other data set.
 
 ### mtcars
 
@@ -134,7 +134,7 @@ Now let's re-use our super simple rule of thumb of keeping only variables with a
 length(PC1_scores_ordered[PC1_scores_ordered > 0.25])
 ```
 
-We got 7 dimensions again.  Noise did not affect the intrinsic dimension.  Yay!!!
+We got 6 intrinsic dimensions again.  Noise did not affect the intrinsic dimension.  Yay!!!
 
 
 ## Alignment
