@@ -1,0 +1,40 @@
+---
+title: "EffectiveDimension"
+author: "Jean Ortega"
+date: "1/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Effective dimension
+
+I tried to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function provided by Marco Del Giudice at https://figshare.com/articles/code/R_function_for_effective_dimensionality_ED_estimation_v_1_/11954661?file=22008351.  
+
+I was a bit surprised by the output, so I modified it to print the eigenvalues, too.
+
+```{r}
+df <- mtcars[, -1]
+ncol(df)
+estimate.ED(df)
+# Returns 3.46 using Shannon entropy and 2.45 using quadratic
+```
+
+
+Recreating `mtcars with rand`....
+```{r}
+set.seed(1)
+X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y
+num_rand <- 20
+X <- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_rand))
+df <- data.frame(X)
+ncol(df)
+estimate.ED(df)
+# Returns 14.9 using Shannon entropy and 10.53 using quadratic
+```
+
+## References
+
+Giudice, M.D. Effective Dimensionality: A Tutorial. Multivar. Behav. Res. 2020, 1–16. doi:10.1080/00273171.2020.1743631.

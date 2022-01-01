@@ -1,5 +1,8 @@
-#
 # estimate.ED
+#
+# Originally downloaded from
+# https://figshare.com/articles/code/R_function_for_effective_dimensionality_ED_estimation_v_1_/11954661?file=22008351
+# on January 1, 2021.
 #
 # Marco Del Giudice (2020). Version 1. Contact: marcodg@unm.edu
 #
