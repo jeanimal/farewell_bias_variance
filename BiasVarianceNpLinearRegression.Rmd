@@ -152,11 +152,11 @@ ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + 
 mean_error_mtcars_with_random <- df_mean
 ```
 
-Wow!  The theoretical results are validated!  Up to p=9-- meaning p=10 with the intercept-- we got a fairly standard bias-variance diagram: train error goes down while test error goes up.  For p>=9, train error is zero, as expected, because the model can interpolate the data.  For p >= 9, test error slowly decreases, showing double descent, eventually going lower than the lowest error we saw in the p < 10 regime.
+Wow!  The theoretical results are validated!  Up to p=9-- meaning p=10 with the intercept-- we got a fairly standard bias-variance diagram: train error goes down while test error goes up.  For p>=9, train error is zero, as expected, because the model can interpolate the data.  For p >= 9, test error slowly decreases, showing double descent, eventually going lower than the lowest error we saw in the p < 10 regime.  The **global** test error minimum is attained in the regime with more columns-- at p=30, meaning all the parameters. 
 
-#### Interpretation
+#### Comparison of data sets
 
-Notice that the **global** test error minimum is attained in the regime with more columns-- at p=30, meaning all the parameters  However, look at the amount of minimum test error attained, just under 5.  If you look back at the bias-variance diagram from the fit where only mtcars columns were used (no random columns), the minimum test error attained was just under 4.  In other words, the lowest test error was achieved when the fit had just the substantive parameters-- that is, a well-specified model-- without all the extra noise columns.  A small model with well-specified parameters attained better test error than a large model with a grab-bag of parameters.  Here is a graph that focuses on these two cases.
+Now instead of looking at the number of parameters p, consider the value of the test error at the minimum.  In this augmented data set, which I call `mtcars with random`, the minimum test error was just under 5.0.  But in the original data set, just `mtcars` columns, the minimum test error of just under 4.0.  In other words, the lowest test error was achieved when the model had just the substantive parameters-- that is, a well-specified model-- without all the extra noise columns. Below is a graph that focuses on these two cases.
 
 ```{r}
 df_mean <- rbind(
@@ -201,7 +201,7 @@ But re-reading the Dar et al. paper, I noticed these two (of three) conditions i
 1. low effective dimension in data
 2. an overparameterized number of low-value (but non-zero signal) features
 
-Clearly the data set has low effective deimsnion when there are 10 mtcars columns (which should mostly have signal) and 20 random columns.  The second condition is met because sampling p of these 30 columns has an 0.3 probability of getting an mtcars column (which is signal) as opposed to a non-signal random column.  The "low but non-zero signal value" applies to the expectation for the column in the data set rather than requiring each column individually to have a low but non-zero signal value.
+Clearly the `mtcars with random` data set has low effective dimension when there are 10 mtcars columns (which should mostly have signal) and 20 random columns.  The second condition is met because sampling p of these 30 columns has an 0.3 probability of getting an mtcars column (which is signal) as opposed to a non-signal random column.  The "low but non-zero signal value" applies to the expectation for the column in the data set rather than requiring each column individually to have a low but non-zero signal value.
 
 The other data sets I tried did not clearly meet these two conditions, and they failed to show double descent.
 
