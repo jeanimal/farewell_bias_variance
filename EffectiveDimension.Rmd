@@ -1,6 +1,6 @@
 ---
 title: "EffectiveDimension"
-author: "Jean Ortega"
+author: "Jean Czerlinski Ortega"
 date: "1/1/2022"
 output: html_document
 ---
@@ -9,6 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Set up
+
+Load the custom function.
+
+```{r}
+source("src/estimate.ED.R")
+```
+
+
 ## Effective dimension
 
 I tried to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function provided by Marco Del Giudice at https://figshare.com/articles/code/R_function_for_effective_dimensionality_ED_estimation_v_1_/11954661?file=22008351.  
@@ -16,24 +25,31 @@ I tried to empirically estimate the effective dimension in both the `mtcars` and
 I was a bit surprised by the output, so I modified it to print the eigenvalues, too.
 
 ```{r}
+# Recreate data.  Drop the "y" column.
 df <- mtcars[, -1]
-ncol(df)
+# Evaluate.
+print(paste0("ncol: ", ncol(df)))
 estimate.ED(df)
-# Returns 3.46 using Shannon entropy and 2.45 using quadratic
+# Returns 3.46 using Shannon entropy H1 (n1) and 2.45 using quadratic entropy H2 (n2)
 ```
 
 
 Recreating `mtcars with rand`....
 ```{r}
+# Recreate data.
 set.seed(1)
 X <- as.matrix(mtcars[, -1]) # Drop mpg (1st col) because it is y
 num_rand <- 20
 X <- cbind(X, matrix(rnorm(num_rand*nrow(X), 0, 1), nrow=nrow(X), ncol=num_rand))
 df <- data.frame(X)
-ncol(df)
+# Evaluate.
+print(paste0("ncol: ", ncol(df)))
 estimate.ED(df)
 # Returns 14.9 using Shannon entropy and 10.53 using quadratic
+# Returns 15.29 using Shannon entropy H1 (n1) and 10.86 using quadratic entropy H2 (n2)
 ```
+
+I had expected the dimensions to be very close.  Why did adding a bunch of random columns increase the effective dimensionality?
 
 ## References
 
