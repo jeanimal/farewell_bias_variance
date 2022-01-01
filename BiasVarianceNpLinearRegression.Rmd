@@ -192,8 +192,18 @@ colnames(splitTrainTest(X, y, n_train=2, p=20, add_intercept=FALSE)$X_train)
 
 Clearly,p=30 gets all the mtcars columns on every sample, and that's why it attains the lowest test error.  (Perhaps I should have used sampling with replacement to avoid this artificial effect.)
 
-As an aside, there are quite a few papers explaining how noise can act like a regularizer, but usually noise is injected as additional rows of "real data + noise" (among other ways).  I was surprised that pure noise columns also had an interesting effect.
+#### Characteritics of the data set
 
+At first, I was surprised that adding purely random cues demonstrated double descent. Although there are quite a few papers explaining how noise can act like a regularizer,  usually noise is injected as additional rows of "real data + noise" (among other ways).  So I was surprised that pure noise columns also had an interesting effect.
+
+But re-reading the Dar et al. paper, I noticed these two (of three) conditions in section 3.1.3 for double descent:
+
+1. low effective dimension in data
+2. an overparameterized number of low-value (but non-zero signal) features
+
+Clearly the data set has low effective deimsnion when there are 10 mtcars columns (which should mostly have signal) and 20 random columns.  The second condition is met because sampling p of these 30 columns has an 0.3 probability of getting an mtcars column (which is signal) as opposed to a non-signal random column.  The "low but non-zero signal value" applies to the expectation for the column in the data set rather than requiring each column individually to have a low but non-zero signal value.
+
+The other data sets I tried did not clearly meet these two conditions, and they failed to show double descent.
 
 ### Reducing number of rows sampled to move interpolation threshold lower
 
@@ -218,8 +228,10 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line()
 ```
 
-Training error is mostly zero after p=4.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks close to p=3 (but why p=4?) and then goes down, although slowly.  We have recovered double descent without random data, although the limit on number of parameters does not let us explore it much. 
+Training error is mostly zero after p=4.  (There can be rounding error in the pseudo-inverse function that keeps it from being exactly zero.)  Test error peaks close to p=3 (but why p=4?) and then goes down, although slowly.  We have recovered double descent without random data, although the limit on number of parameters does not let us explore it much. However, it is quite possible that the lowest error would be in underparameterized regime because these two conditions are not clearly satisfied:
 
+1. low effective dimension in data
+2. an overparameterized number of low-value (but non-zero signal) features
 
 ### Adding columns with 2nd order effects
 
@@ -257,7 +269,12 @@ df_mean <- df_long %>% group_by(p, name) %>% summarize(mean_error=mean(value))
 ggplot(df_mean, aes(p, mean_error, color=name), group_by(name)) + geom_line() + geom_point()
 ```
 
-Huh?  I don't see the original bias-variance relationship with p < 10.  Train error should be near zero at p=10.  And test error just keeps going up.  I will look for a bug in my code.
+I do not see the original bias-variance relationship with p < 10.  Train error should be near zero at p=10.  This might indicate a bug in the code, but so far I have not found one.
+
+As for the test error going up and up, that is not necessarily a bug.  Adding columns with second order effects would not satisfy these conditions:
+
+1. low effective dimension in data
+2. an overparameterized number of low-value (but non-zero signal) features
 
 ## References
 
