@@ -13,7 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The goal was to empirically estimate the effective dimension in both the `mtcars` and `mtcars with random` data sets using an R function.
 
-I later realized I also need to estimate the intrinsic dimension (ID), so I added an estimation of ID.  Intrinsic dimension takes into account the **signal** structure because effective dimension of the data does not adjust for noise.  
+I later realized I also need to estimate the intrinsic dimension (ID), so I added an estimation of ID.  Intrinsic dimension takes into account the **signal** structure because effective dimension of the data does not adjust for noise.
+
+This is an empirical exploration of some of the conditions described in the main article, [BiasVarianceNpLinearRegression.Rmd](./BiasVarianceNpLinearRegression.Rmd.html), on how even linear regression can escape the bias-variance trade-off.
 
 ## Set up
 
