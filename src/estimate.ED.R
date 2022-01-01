@@ -46,7 +46,8 @@
 # small.sample.c	if TRUE (default), the function returns estimators corrected for small-sample bias
 # round.digits		rounding digits for the output (default is 2)
 # print.summary		if TRUE (default), the function prints a summary of the analysis before returning the results
-#
+# print.eigen     if TRUE (default), the function prints the normalized and sorted eigenvalues before the summary or results
+# 
 # Value
 # returns a list object containing some or all of the following:
 #
@@ -65,7 +66,7 @@ library(rootSolve)
 library(nlshrink)
 library(Matrix)
 
-estimate.ED <- function (x, sample.size = NULL, rel.values = NULL, cov.mat = FALSE, small.sample.c = FALSE, round.digits = 2, print.summary = TRUE) {
+estimate.ED <- function (x, sample.size = NULL, rel.values = NULL, cov.mat = FALSE, small.sample.c = FALSE, round.digits = 2, print.summary = TRUE, print.eigen = TRUE) {
 
 indefinite.matrix = FALSE
 
@@ -204,6 +205,14 @@ if ( (small.sample.c == TRUE) & (is.null(eigen_val.c) == FALSE) ) {  # estimator
 	output$n2.c = max((eigen_sum.c^2)/sum(eigen_val.c^2), output$n2)
 	output$nInf.c = max(eigen_sum.c/max(eigen_val.c), output$nInf) 
 	output$nC.c = max(K - ((K^2)/(eigen_sum.c^2))*eigen_var.c, output$nC) 
+}
+
+########## print eigenvalues if requested
+
+if (print.eigen == TRUE) {
+  
+  print("normalized and sorted eigenvalues:")
+  print(norm_eigen_val)
 }
 
 ########## print summary of the analysis if requested
