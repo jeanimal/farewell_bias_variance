@@ -45,7 +45,6 @@ df <- data.frame(X)
 # Evaluate.
 print(paste0("ncol: ", ncol(df)))
 estimate.ED(df)
-# Returns 14.9 using Shannon entropy and 10.53 using quadratic
 # Returns 15.29 using Shannon entropy H1 (n1) and 10.86 using quadratic entropy H2 (n2)
 ```
 
