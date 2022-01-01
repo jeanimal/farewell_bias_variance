@@ -222,7 +222,7 @@ pre code {
 ##     list(X_train = X_train, y_train = y_train, X_test = X_test, 
 ##         y_test = y_test)
 ## }
-## &lt;bytecode: 0x7fe5cc664f08&gt;</code></pre>
+## &lt;bytecode: 0x7f7f786c0058&gt;</code></pre>
 <p>Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.</p>
 <p>Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark’s blog in using ridgeless regression to get the same effects with a lot less computation time. (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero. The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).</p>
 <pre class="r"><code># Samples n_train rows and p columns from X for X_train and y_train.
@@ -325,7 +325,7 @@ ggplot(df_mean_test_error, aes(p, mean_error, color=features), group_by(features
 <li>An overparameterized number of low-value (but non-zero signal) features</li>
 </ol>
 <p>Clearly the <code>mtcars with random</code> data set has low effective dimension when there are 10 mtcars columns (which should mostly have signal) and 20 random columns. The second condition is met because sampling p of these 30 columns has an 0.3 probability of getting an mtcars column (which is signal) as opposed to a non-signal random column. The “low but non-zero signal value” applies to the expectation for the column in the data set rather than requiring each column individually to have a low but non-zero signal value.</p>
-<p>See the related article <a href="./EffectiveDimensions.html">EffectiveDimensions</a> for empirical calculations of the dimensions in the data (the first two conditions).</p>
+<p>See the related article <a href="./EffectiveDimension.html">EffectiveDimension</a> for empirical calculations of the dimensions in the data (the first two conditions).</p>
 <p>The other data sets I tried did not clearly meet these two conditions, and they failed to show double descent.</p>
 </div>
 </div>
