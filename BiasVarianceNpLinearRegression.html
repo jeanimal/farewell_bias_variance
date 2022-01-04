@@ -202,7 +202,7 @@ pre code {
 <ul>
 <li>It randomly selects n_train rows of X and y</li>
 <li>The remaining rows are used for test data for X and y</li>
-<li>I also randomely selects p columns of X for use in both train and test.</li>
+<li>It also randomely selects p columns of X for use in both train and test.</li>
 </ul>
 <pre class="r"><code>splitTrainTest</code></pre>
 <pre><code>## function (X, y, n_train, p, add_intercept) 
@@ -222,7 +222,7 @@ pre code {
 ##     list(X_train = X_train, y_train = y_train, X_test = X_test, 
 ##         y_test = y_test)
 ## }
-## &lt;bytecode: 0x7f7f786c0058&gt;</code></pre>
+## &lt;bytecode: 0x7f91b64da3f0&gt;</code></pre>
 <p>Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.</p>
 <p>Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark’s blog in using ridgeless regression to get the same effects with a lot less computation time. (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero. The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).</p>
 <pre class="r"><code># Samples n_train rows and p columns from X for X_train and y_train.
