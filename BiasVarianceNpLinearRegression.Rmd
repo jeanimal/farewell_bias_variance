@@ -1,7 +1,7 @@
 ---
 title: "Farewell to Bias-Variance Tradeoff: A study with linear regression"
 author: "Jean Czerlinski Ortega"
-date: "1/1/2022"
+date: "1/7/2022"
 output: html_document
 ---
 
@@ -167,10 +167,16 @@ df_mean <- rbind(
 
 ```{r}
 df_mean_test_error <- df_mean %>% filter(name == "test")
-ggplot(df_mean_test_error, aes(p, mean_error, color=features), group_by(features)) + geom_line() + geom_point() + ylab("mean test error")
+ggplot(df_mean_test_error, aes(p, mean_error, color=features), group_by(features)) + geom_line() + geom_point() + ylab("mean test error") + xlab("number of parameters") + scale_color_manual(values = c("blue", "red"))
+```
+Or to make the lesson a bit more generic, let me change the data set labels to their categories in the paper's proof (although mis-specification is not a sufficient condition for double descent).
+
+```{r}
+df_mean_test_error <- df_mean %>% filter(name == "test")
+ggplot(df_mean_test_error, aes(p, mean_error, color=features), group_by(features)) + geom_line() + geom_point() + ylab("mean test error") + xlab("number of parameters") + scale_color_manual(labels=c("well-specified", "mis-specified"), values = c("blue", "red"))
 ```
 
-That said, in real life we do not always know or have access to just the substantive parameters.  And in the internet age, we can often access a lot of low-signal parameters easily by scraping the internet.  In that case, collecting more and more features is helpful.  As Dar et al. point out, this is akin to taking an ensemble of models or boosting or the strength of weak learners.  
+That said, in real life we do not always know or have access to just the substantive, well-specified parameters.  And in the internet age, we can often access a lot of low-signal parameters easily by scraping the internet.  In that case, collecting more and more features is helpful.  As Dar et al. point out, this is akin to taking an ensemble of models or boosting or the strength of weak learners.  
 
 Below is an example of the grab-bag of parameters we get for different values of p.  Columns with a name are original to the mtcars data set.  Columns without a name contain random data.  As you can see, the higher p is, the more columns of useful mtcars data we get.
 
