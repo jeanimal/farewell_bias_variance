@@ -1,5 +1,5 @@
 ---
-title: "Farewell to Bias-Variance Tradeoff: A study with linear regression"
+title: "Farewell to Bias-Variance Tradeoff? A study with linear regression"
 author: "Jean Czerlinski Ortega"
 date: "1/7/2022"
 output: html_document
