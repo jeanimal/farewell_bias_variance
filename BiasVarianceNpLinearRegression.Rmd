@@ -50,9 +50,9 @@ splitTrainTest
 ```
 
 
-Below I wrote a function to use the above sampler to generate data, then use a funtion that fits a linear regression and returns the root mean squared error on the training data and test data.
+Below I wrote a function to use the above sampler to generate data, then use a function that fits a linear regression and returns the root mean squared error on the training data and test data.
 
-Note that the Dar et al. paper used gradient descent to fit the linear model, but here I follow Michael Clark's blog in using ridgeless regression to get the same effects with a lot less computation time.  (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero.  The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).
+But how to fit a linear regression when the design matrix has number of rows < number of columns?  The standard `lm` stats function will not handle this case.  The Dar et al. paper fit the linear model with a minimum l2-norm solution using its closed-form solution (which reaches the same solution as gradient descent when initialized at zero).  But here I follow Michael Clark's blog in using ridgeless regression to get the same effects with a lot less computation time.  (Ridgeless regression uses the pseudo inverse of the design matrix but gets its name because it is equivalent to using ridge regression in the limit as the lambda parameter goes to zero.  The double descent behavior of ridgeless regression was also analytically studied in Hastie et al. 2019).
 
 ```{r}
 # Samples n_train rows and p columns from X for X_train and y_train.
